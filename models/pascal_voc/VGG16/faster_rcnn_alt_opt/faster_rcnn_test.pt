@@ -272,7 +272,7 @@ layer {
   param { lr_mult: 1.0 }
   param { lr_mult: 2.0 }
   convolution_param {
-    num_output: 60
+    num_output: 40
     kernel_size: 3 pad: 1 stride: 1
   }
 }
@@ -419,7 +419,7 @@ layer {
   bottom: "fc7"
   top: "cls_score"
   inner_product_param {
-    num_output: 2
+    num_output: 10
   }
 }
 layer {
@@ -428,7 +428,7 @@ layer {
   bottom: "fc7"
   top: "bbox_pred"
   inner_product_param {
-    num_output: 8
+    num_output: 40
   }
 }
 layer {

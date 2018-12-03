@@ -15,22 +15,22 @@ from fast_rcnn.nms_wrapper import nms
 
 def computScale(bottom):
     anchor_scale = np.zeros(2)
-    pre_scale = bottom.reshape(60)
+    pre_scale = bottom.reshape(40)
     #pre_scale = bottom[4].data.reshape(60)
     #print(pre_scale)
     #plt.plot(range(60),pre_scale)
     #plt.show()
     #moxing average smoothed
     #m = np.mean(pre_scale)
-    for i in range(12):
-        m=np.mean(pre_scale[5*i:5*i+5])
-        pre_scale[5*i:5*i+5] = pre_scale[5*i:5*i+5]-m
+    for i in range(4):
+        m=np.mean(pre_scale[10*i:10*i+10])
+        pre_scale[10*i:10*i+10] = pre_scale[10*i:10*i+10]-m
     #pre_scale[:] = pre_scale[:] - m
     #print(pre_scale)
     #plt.plot(range(60),pre_scale)
     #plt.show()
     #1D NMS
-    mark = np.zeros(60)
+    mark = np.zeros(40)
     while(0 in mark):
         index = np.array(np.where(mark==0)[0])
         #print(index)
@@ -41,7 +41,7 @@ def computScale(bottom):
         maxscale_index = index[maxpostion]
         mark[maxscale_index] = 1
         for i in range(maxscale_index-3,maxscale_index+4):
-            if(i>=0 and i<60):
+            if(i>=0 and i<40):
                 if(mark[i]==0):
                     mark[i]=-1
         #print(mark)
@@ -55,25 +55,43 @@ def computScale(bottom):
     max_index = np.array(np.where(mark==1)[0])
     max_scale = pre_scale[max_index]
     #print(len(max_scale))
+    #print("gj_")
     #print(max_index)
     #print(max_scale)
     while(0 in anchor_scale):
         anchor_index = np.array(np.where(anchor_scale==0)[0])
         s = np.argmax(max_scale)
+        #print(s)
+        #print(max_index[s])
         if(max_scale[s]==-1):
             break
         max_scale[s] = -1
-        a_s = 5*int(max_index[s]/10+1)
+        #a_s = 4*2**int(max_index[s]/10)
+        a_s = int(max_index[s])+1
+        #if(abs(max_index[s]-a_s)>abs(max_index[s]-a_s/2)):
+        #    a_s = a_s/2
+        '''
+        if(a_s<4):
+            a_s = 4
+        if(a_s>32):
+            a_s = 32
+        '''
+        if(a_s<1):
+            a_s =1
+        if(a_s>40):
+            a_s = 40
+        
+        #print(a_s)
         if(a_s not in anchor_scale):
             anchor_scale[anchor_index[0]] = a_s
     while(0 in anchor_scale):
         anchor_index = np.array(np.where(anchor_scale==0)[0])
-        #if(4 not in anchor_scale):
-        #    anchor_scale[anchor_index[0]] = 4
-        if(10 not in anchor_scale):
-            anchor_scale[anchor_index[0]] = 10
-        if(15 not in anchor_scale):
-            anchor_scale[anchor_index[0]] = 15
+        if(8 not in anchor_scale):
+            anchor_scale[anchor_index[0]] = 8
+        if(16 not in anchor_scale):
+            anchor_scale[anchor_index[0]] = 16
+        #if(64 not in anchor_scale):
+        #    anchor_scale[anchor_index[0]] = 64
     #minscale = np.argmin(anchor_scale)
     #anchor bu neng quan da yu 32
     #if(anchor_scale[minscale]>32):
@@ -95,7 +113,7 @@ class ProposalLayer(caffe.Layer):
         layer_params = yaml.load(self.param_str_)
 
         self._feat_stride = layer_params['feat_stride']
-        anchor_scales = layer_params.get('scales', (10, 15))
+        anchor_scales = layer_params.get('scales', (8,16))
         #print("gjanchor_scales")
         #print(anchor_scales)
         self._anchors = generate_anchors(scales=np.array(anchor_scales))
@@ -129,6 +147,7 @@ class ProposalLayer(caffe.Layer):
         # take after_nms_topN proposals after NMS
         # return the top proposals (-> RoIs top, scores top)
         anchor_scale = computScale(bottom[3].data)
+        #anchor_scale = np.array([8,32])
 
 
         new_anchors = generate_anchors(scales=anchor_scale)
@@ -172,6 +191,8 @@ class ProposalLayer(caffe.Layer):
         # shift anchors (K, A, 4)
         # reshape to (K*A, 4) shifted anchors
         A = self._num_anchors
+        #print("A")
+        #print(A)
         K = shifts.shape[0]
         anchors = new_anchors.reshape((1, A, 4)) + \
                   shifts.reshape((1, K, 4)).transpose((1, 0, 2))
@@ -201,9 +222,15 @@ class ProposalLayer(caffe.Layer):
 
         # 3. remove predicted boxes with either height or width < threshold
         # (NOTE: convert min_size to input image scale stored in im_info[2])
+        #print("proposals")
+        #print(len(proposals))
         keep = _filter_boxes(proposals, min_size * im_info[2])
+        #print("keep")
+        #print(keep)
         proposals = proposals[keep, :]
         scores = scores[keep]
+        print("gjscores")
+        print(scores)
 
         # 4. sort all (proposal, score) pairs by score from highest to lowest
         # 5. take top pre_nms_topN (e.g. 6000)
@@ -234,6 +261,7 @@ class ProposalLayer(caffe.Layer):
         if len(top) > 1:
             top[1].reshape(*(scores.shape))
             top[1].data[...] = scores
+        print("okanchor")
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""

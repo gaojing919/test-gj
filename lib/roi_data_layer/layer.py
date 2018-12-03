@@ -109,7 +109,7 @@ class RoIDataLayer(caffe.Layer):
             self._name_to_top_map['gt_boxes'] = idx
             idx += 1
 
-            top[idx].reshape(1,60)
+            top[idx].reshape(1,40)
             self._name_to_top_map['gt_scale'] = idx
             idx +=1
         else: # not using RPN
@@ -126,7 +126,7 @@ class RoIDataLayer(caffe.Layer):
             self._name_to_top_map['labels'] = idx
             idx += 1
 
-            #top[idx].reshape(cfg.TRAIN.IMS_PER_BATCH,60)
+            #top[idx].reshape(cfg.TRAIN.IMS_PER_BATCH,40)
             #self._name_to_top_map['gt_scale'] = idx
             #idx +=1
 
@@ -189,11 +189,11 @@ class RoIDataLayer(caffe.Layer):
         #print(top[2].data)
         #print("gjname")
         #print(blobs)
-        if('gt_scale' in blobs):
+        if('gt_boxes' in blobs):
             #print("fjgt_scale")
-            top[3].reshape(1,60,1,1)
+            top[3].reshape(1,40,1,1)
         #else:
-        #    top[3].reshape(cfg.TRAIN.IMS_PER_BATCH,60,1,1)
+        #    top[3].reshape(cfg.TRAIN.IMS_PER_BATCH,40,1,1)
         #print(top[3].data)
         #top[3].data.reshape(1,60,1,1)
         #print(top[3].data.shape)

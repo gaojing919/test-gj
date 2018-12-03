@@ -196,5 +196,18 @@ def voc_eval(detpath,
     # ground truth
     prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
     ap = voc_ap(rec, prec, use_07_metric)
-
+    f = open("pr.txt","a")
+    f.write("rec: ")
+    for x in rec:
+        f.write(str(x)+",")
+    f.write("\n")
+    f.write("prec: ")
+    for y in prec:
+        f.write(str(y)+",")
+    f.write("\n")
+    f.close()
+    print(rec)
+    print(" ")
+    print(prec)
+    print("\n")
     return rec, prec, ap

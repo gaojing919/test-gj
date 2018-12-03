@@ -18,7 +18,7 @@ from scipy.stats import multivariate_normal
 import math
 
 def set_scale(boxes):
-    b_scale = np.zeros(60)
+    b_scale = np.zeros(40)
     #boxes = np.array(boxes[:,0:4])
     b_large_size = np.zeros(len(boxes))
     boxes = np.array(boxes[:,0:4])
@@ -27,13 +27,14 @@ def set_scale(boxes):
     #ymin = boxes[:][1]
     #xmax = boxes[:][2]
     #ymax = boxes[:][3]
-    w = np.array(boxes[:,2]-boxes[:,0])
-    h = np.array(boxes[:,3]-boxes[:,1])
+    #w = np.array(boxes[:,2]-boxes[:,0])
+    #h = np.array(boxes[:,3]-boxes[:,1])
     size = np.array([boxes[:,2]-boxes[:,0],boxes[:,3]-boxes[:,1]])
     #print(w)
     #print(h)
     #print("gjsize")
     #print(size)
+    #尺度定义为面积开根号，除以16
     for i in range(size.shape[1]):
         b_large_size[i] = math.sqrt(size[0,i]*size[1,i])/16
     #print(b_large_size)
@@ -46,29 +47,41 @@ def set_scale(boxes):
         #    index = 9
         #if(index>59):
         #    index = 59
-        #print("gj")
+        '''
+        x = len(bin(int(b_size)))-2
+        if(abs(b_size-2**x)<abs(b_size-2**(x-1))):
+          y = x
+        else:
+          y = x-1
         #print(b_size)
-        x = round(b_size/5)
-        #if(abs(b_size-2**x)<abs(b_size-2**(x-1))):
-        #  y = x
-        #else:
-        #  y = x-1
-        #print(b_size)
-        #print(x)
-        index = int((x-1)*10+5)
+        #print()
+
+        index = (y-2)*10+5
+        '''
+        index = int(round(b_size)-1)
 
         #print(index)
         #i = len(bin(int(b_size)))-4
         #index = i*10-1
         if(index<0):
-            index = 5
-        if(index>55):
-            index = 55
+            #index = 5
+            index = 0
+        if(index>39):
+            index = 39
+        '''
+        if(index>35):
+            index = 35
+        '''
         if(b_scale[index]==0):
             b_scale[index]=1
             model_count = model_count+1
             model_index.append(index)
             #print(index)
+    #print(b_large_size)
+    #print("gj_yuan")
+    #print(model_index)
+    #for o in model_index:
+    #    print(2**((o/10)-5)+8)
     for i in range(b_scale.size):
         d = 0
         for x in model_index:
@@ -81,14 +94,13 @@ def set_scale(boxes):
                     r = 1/d
                 else:
                     r = 0
-                    #ii = j+(i-j)/10
                 b_scale[i] = b_scale[i]+r*norm.pdf(i)
                 if(math.isnan(b_scale[i])):
                     print("nan")
                     print(d)
                     print(norm.pdf(i))
                 if(b_scale[i]>1):
-                    b_scale[i] = 1
+                    b_scale[i]=1
                     #print("big1")
     #plt.plot(range(60),b_scale)
     #plt.show()
@@ -137,10 +149,13 @@ def get_minibatch(roidb, num_classes):
         gt_boxes = np.empty((len(gt_inds), 5), dtype=np.float32)
         gt_boxes[:, 0:4] = roidb[0]['boxes'][gt_inds, :] * im_scales[0]
         gt_boxes[:, 4] = roidb[0]['gt_classes'][gt_inds]
+        #print("gjgt_boxes[:, 4]")
+        #print(gt_boxes[:, 4])
         blobs['gt_boxes'] = gt_boxes
         blobs['im_info'] = np.array(
             [[im_blob.shape[2], im_blob.shape[3], im_scales[0]]],
             dtype=np.float32)
+        
         #print("roidb[0]['boxes'][gt_inds, :]")
         #print(roidb[0]['boxes'][gt_inds, :])
         #blobs['gt_scale'] = set_scale(roidb[0]['boxes'][gt_inds, :])
@@ -154,7 +169,7 @@ def get_minibatch(roidb, num_classes):
         labels_blob = np.zeros((0), dtype=np.float32)
         bbox_targets_blob = np.zeros((0, 4 * num_classes), dtype=np.float32)
         bbox_inside_blob = np.zeros(bbox_targets_blob.shape, dtype=np.float32)
-        #scale_blob = np.zeros((0, 60), dtype=np.float32)
+        #scale_blob = np.zeros((0, 40), dtype=np.float32)
         # all_overlaps = []
         for im_i in range(num_images):
             labels, overlaps, im_rois, bbox_targets, bbox_inside_weights \

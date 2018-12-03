@@ -35,15 +35,15 @@ __C.TRAIN = edict()
 
 # Scales to use during training (can list multiple scales)
 # Each scale is the pixel size of an image's shortest side
+#__C.TRAIN.SCALES = (600,)
 __C.TRAIN.SCALES = (600,)
 
 # Max pixel size of the longest side of a scaled input image
+#__C.TRAIN.MAX_SIZE = 1000
 __C.TRAIN.MAX_SIZE = 1000
-
 # Images to use per minibatch
+#__C.TRAIN.IMS_PER_BATCH = 2
 __C.TRAIN.IMS_PER_BATCH = 2
-#__C.TRAIN.IMS_PER_BATCH = 1
-
 # Minibatch size (number of regions of interest [ROIs])
 __C.TRAIN.BATCH_SIZE = 128
 
@@ -116,7 +116,7 @@ __C.TRAIN.RPN_PRE_NMS_TOP_N = 12000
 # Number of top scoring boxes to keep after applying NMS to RPN proposals
 __C.TRAIN.RPN_POST_NMS_TOP_N = 2000
 # Proposal height and width both need to be greater than RPN_MIN_SIZE (at orig image scale)
-__C.TRAIN.RPN_MIN_SIZE = 8
+__C.TRAIN.RPN_MIN_SIZE = 16
 # Deprecated (outside weights)
 __C.TRAIN.RPN_BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
 # Give the positive RPN examples weight of p * 1 / {num positives}
@@ -133,9 +133,11 @@ __C.TEST = edict()
 
 # Scales to use during testing (can list multiple scales)
 # Each scale is the pixel size of an image's shortest side
+#__C.TEST.SCALES = (600,)
 __C.TEST.SCALES = (600,)
 
 # Max pixel size of the longest side of a scaled input image
+#__C.TEST.MAX_SIZE = 1000
 __C.TEST.MAX_SIZE = 1000
 
 # Overlap threshold used for non-maximum suppression (suppress boxes with
@@ -162,7 +164,7 @@ __C.TEST.RPN_PRE_NMS_TOP_N = 6000
 ## Number of top scoring boxes to keep after applying NMS to RPN proposals
 __C.TEST.RPN_POST_NMS_TOP_N = 300
 # Proposal height and width both need to be greater than RPN_MIN_SIZE (at orig image scale)
-__C.TEST.RPN_MIN_SIZE = 8
+__C.TEST.RPN_MIN_SIZE = 16
 
 
 #
@@ -232,6 +234,7 @@ def _merge_a_into_b(a, b):
 
     for k, v in a.items():
         # a must specify keys that are in b
+        #b.has_key(k):
         if not k in b:
             raise KeyError('{} is not a valid config key'.format(k))
 
@@ -271,10 +274,10 @@ def cfg_from_list(cfg_list):
         key_list = k.split('.')
         d = __C
         for subkey in key_list[:-1]:
-            assert subkey in d
+            assert d.has_key(subkey)
             d = d[subkey]
         subkey = key_list[-1]
-        assert subkey in d
+        assert d.has_key(subkey)
         try:
             value = literal_eval(v)
         except:

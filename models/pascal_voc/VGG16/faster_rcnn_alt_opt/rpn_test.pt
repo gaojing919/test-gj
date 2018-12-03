@@ -270,10 +270,11 @@ layer {
   bottom: "conv5_3"
   top: "scale/output"
   convolution_param {
-    num_output: 60
+    num_output: 40
     kernel_size: 3 pad: 1 stride: 1
   }
 }
+
 layer {
     bottom: "scale/output"
     top: "scale_pool"
@@ -324,7 +325,7 @@ layer {
   bottom: "rpn/output"
   top: "rpn_bbox_pred"
   convolution_param {
-    num_output: 24   # 4 * 9(anchors)
+    num_output: 24  # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
   }
 }

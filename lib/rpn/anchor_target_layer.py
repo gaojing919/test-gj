@@ -19,22 +19,22 @@ import matplotlib.pyplot as plt
 DEBUG = False
 def computScale(bottom):
     anchor_scale = np.zeros(2)
-    pre_scale = bottom.reshape(60)
+    pre_scale = bottom.reshape(40)
     #pre_scale = bottom[4].data.reshape(60)
     #print(pre_scale)
     #plt.plot(range(60),pre_scale)
     #plt.show()
     #moxing average smoothed
     #m = np.mean(pre_scale)
-    for i in range(12):
-        m=np.mean(pre_scale[5*i:5*i+5])
-        pre_scale[5*i:5*i+5] = pre_scale[5*i:5*i+5]-m
+    for i in range(4):
+        m=np.mean(pre_scale[10*i:10*i+10])
+        pre_scale[10*i:10*i+10] = pre_scale[10*i:10*i+10]-m
     #pre_scale[:] = pre_scale[:] - m
     #print(pre_scale)
     #plt.plot(range(60),pre_scale)
     #plt.show()
     #1D NMS
-    mark = np.zeros(60)
+    mark = np.zeros(40)
     while(0 in mark):
         index = np.array(np.where(mark==0)[0])
         #print(index)
@@ -45,7 +45,7 @@ def computScale(bottom):
         maxscale_index = index[maxpostion]
         mark[maxscale_index] = 1
         for i in range(maxscale_index-3,maxscale_index+4):
-            if(i>=0 and i<60):
+            if(i>=0 and i<40):
                 if(mark[i]==0):
                     mark[i]=-1
         #print(mark)
@@ -59,31 +59,49 @@ def computScale(bottom):
     max_index = np.array(np.where(mark==1)[0])
     max_scale = pre_scale[max_index]
     #print(len(max_scale))
+    #print("gj_")
     #print(max_index)
     #print(max_scale)
     while(0 in anchor_scale):
         anchor_index = np.array(np.where(anchor_scale==0)[0])
         s = np.argmax(max_scale)
+        #print(s)
+        #print(max_index[s])
         if(max_scale[s]==-1):
             break
         max_scale[s] = -1
-        a_s = 5*int(max_index[s]/10+1)
+        #a_s = 4*2**int(max_index[s]/10)
+        a_s = int(max_index[s])+1
+        #if(abs(max_index[s]-a_s)>abs(max_index[s]-a_s/2)):
+        #    a_s = a_s/2
+        '''
+        if(a_s<4):
+            a_s = 4
+        if(a_s>32):
+            a_s = 32
+        '''
+        if(a_s<1):
+            a_s =1
+        if(a_s>40):
+            a_s = 40
+        
+        #print(a_s)
         if(a_s not in anchor_scale):
             anchor_scale[anchor_index[0]] = a_s
     while(0 in anchor_scale):
         anchor_index = np.array(np.where(anchor_scale==0)[0])
-        #if(4 not in anchor_scale):
-        #    anchor_scale[anchor_index[0]] = 4
-        if(10 not in anchor_scale):
-            anchor_scale[anchor_index[0]] = 10
-        if(15 not in anchor_scale):
-            anchor_scale[anchor_index[0]] = 15
+        if(8 not in anchor_scale):
+            anchor_scale[anchor_index[0]] = 8
+        if(16 not in anchor_scale):
+            anchor_scale[anchor_index[0]] = 16
+        #if(64 not in anchor_scale):
+        #    anchor_scale[anchor_index[0]] = 64
     #minscale = np.argmin(anchor_scale)
     #anchor bu neng quan da yu 32
     #if(anchor_scale[minscale]>32):
     #    anchor_scale[minscale] = 32
     anchor_scale.sort()
-    print(anchor_scale)
+    #print(anchor_scale)
     return anchor_scale
 
 class AnchorTargetLayer(caffe.Layer):
@@ -96,7 +114,7 @@ class AnchorTargetLayer(caffe.Layer):
         layer_params = yaml.load(self.param_str_)
         #print("gjbottom[4].data")
         #print(bottom[4].data)
-        anchor_scales = layer_params.get('scales', ( 10, 15))
+        anchor_scales = layer_params.get('scales', (8, 16))
         #print("gjanchor_scales")
         #print(anchor_scales)
         self._anchors = generate_anchors(scales=np.array(anchor_scales))
@@ -126,6 +144,8 @@ class AnchorTargetLayer(caffe.Layer):
             print ('AnchorTargetLayer: height', height, 'width', width)
 
         A = self._num_anchors
+        print("gjA")
+        print(A)
         # labels
         top[0].reshape(1, 1, A * height, width)
          #bbox_targets
@@ -179,10 +199,13 @@ class AnchorTargetLayer(caffe.Layer):
         '''
         #isok = False
         anchor_scale = computScale(bottom[4].data)
+        #print("gjanchor_scale")
+        #print(anchor_scale)
         #isfirst = True
         #while(not isok):
-            
-            
+        print(anchor_scale)
+        
+        
 
 
         new_anchors = generate_anchors(scales=anchor_scale)
@@ -228,6 +251,17 @@ class AnchorTargetLayer(caffe.Layer):
         all_anchors = all_anchors.reshape((K * A, 4))
         total_anchors = int(K * A)
         #print(all_anchors)
+        '''
+        for a in all_anchors:
+            if(a[0]<-self._allowed_border):
+                a[0] = -self._allowed_border
+            if(a[1]<-self._allowed_border):
+                a[1] = -self._allowed_border
+            if(a[2]>=im_info[1] + self._allowed_border):
+                a[2] = im_info[1] + self._allowed_border
+            if(a[3]>=im_info[0] + self._allowed_border):
+                a[3] = im_info[0] + self._allowed_border
+        '''
 
         # only keep anchors inside the image
         inds_inside = np.where(
@@ -236,7 +270,11 @@ class AnchorTargetLayer(caffe.Layer):
             (all_anchors[:, 2] < im_info[1] + self._allowed_border) &  # width
             (all_anchors[:, 3] < im_info[0] + self._allowed_border)    # height
         )[0]
-    #print(all_anchors)
+        #if(inds_inside.size>0):
+        #    isok = True
+        #else:
+        #    anchor_scale[:] = anchor_scale[:]/2
+        #print(all_anchors)
         #print(im_info[1])
         #print(inds_inside)
 
@@ -246,6 +284,7 @@ class AnchorTargetLayer(caffe.Layer):
 
         # keep only inside anchors
         anchors = all_anchors[inds_inside, :]
+        #print(anchors)
         if DEBUG:
             print ('anchors.shape', anchors.shape)
 
@@ -322,12 +361,14 @@ class AnchorTargetLayer(caffe.Layer):
 
         if DEBUG:
             self._sums += bbox_targets[labels == 1, :].sum(axis=0)
-            self._squared_sums += (bbox_targets[labels == 1, :] ** 2).sum(axis=0)
-            self._counts += np.sum(labels == 1)
             means = self._sums / self._counts
-            stds = np.sqrt(self._squared_sums / self._counts - means ** 2)
+            self._squared_sums += ((bbox_targets[labels == 1, :]-means) ** 2).sum(axis=0)
+            self._counts += np.sum(labels == 1)            
+            stds = np.sqrt(self._squared_sums / self._counts)
+            #print(bbox_targets[labels == 1, :])
             print ('means:')
             print (means)
+            #print(self._squared_sums)
             print ('stdevs:')
             print (stds)
 

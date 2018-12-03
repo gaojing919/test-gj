@@ -87,6 +87,9 @@ def im_proposals(net, im):
     blobs['data'], blobs['im_info'] = _get_image_blob(im)
     net.blobs['data'].reshape(*(blobs['data'].shape))
     net.blobs['im_info'].reshape(*(blobs['im_info'].shape))
+    #print("1")
+    #print(blobs['data'])
+    #print(blobs['im_info'])
     blobs_out = net.forward(
             data=blobs['data'].astype(np.float32, copy=False),
             im_info=blobs['im_info'].astype(np.float32, copy=False))
@@ -103,8 +106,10 @@ def imdb_proposals(net, imdb):
     _t = Timer()
     imdb_boxes = [[] for _ in range(imdb.num_images)]
     for i in range(imdb.num_images):
+        #if(i<17300):
+        #    continue
         im = cv2.imread(imdb.image_path_at(i))
-        #print(imdb.image_path_at(i))
+        print(imdb.image_path_at(i))
         _t.tic()
         imdb_boxes[i], scores = im_proposals(net, im)
         _t.toc()
