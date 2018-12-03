@@ -20,12 +20,6 @@ DEBUG = False
 def computScale(bottom):
     anchor_scale = np.zeros(2)
     pre_scale = bottom.reshape(40)
-    #pre_scale = bottom[4].data.reshape(60)
-    #print(pre_scale)
-    #plt.plot(range(60),pre_scale)
-    #plt.show()
-    #moxing average smoothed
-    #m = np.mean(pre_scale)
     for i in range(4):
         m=np.mean(pre_scale[10*i:10*i+10])
         pre_scale[10*i:10*i+10] = pre_scale[10*i:10*i+10]-m
