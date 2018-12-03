@@ -488,7 +488,7 @@ layer {
   param { lr_mult: 0 decay_mult: 0 }
   param { lr_mult: 0 decay_mult: 0 }
   convolution_param {
-    num_output: 12   # 2(bg/fg) * 9(anchors)
+    num_output: 240   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }
@@ -502,7 +502,7 @@ layer {
   param { lr_mult: 0 decay_mult: 0 }
   param { lr_mult: 0 decay_mult: 0 }
   convolution_param {
-    num_output: 24   # 4 * 9(anchors)
+    num_output:480  # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
   }
 }
